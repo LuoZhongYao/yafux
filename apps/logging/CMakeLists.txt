@@ -6,4 +6,4 @@ target_link_libraries(nes.elf PRIVATE stm32 logging)
 
 add_custom_command(TARGET nes.elf POST_BUILD
 	COMMAND ${CMAKE_OBJCOPY}
-	ARGS -Oihex nes.elf ${CMAKE_BINARY_DIR}/nes.hex)
+	ARGS -Oihex nes.elf nes.hex)

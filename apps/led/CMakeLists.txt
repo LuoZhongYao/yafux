@@ -6,4 +6,4 @@ target_link_libraries(led.elf PRIVATE stm32)
 
 add_custom_command(TARGET led.elf POST_BUILD
 	COMMAND ${CMAKE_OBJCOPY}
-	ARGS -Oihex led.elf ${CMAKE_BINARY_DIR}/led.hex)
+	ARGS -Oihex led.elf led.hex)
