@@ -1,0 +1,16 @@
+*.o
+*.a
+*.gz
+*.rar
+*.zip
+*.d
+*.log
+*.swp
+*.out
+*.nes
+compile_flags.txt
+.vscode
+GPATH
+GRTAGS
+GTAGS
+build/
