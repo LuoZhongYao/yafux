@@ -24,7 +24,7 @@ jobs:
 
     # Runs a single command using the runners shell
     - name: Prepare build environment
-      run: sudo apt install -y arm-none-eabi-gcc-cs arm-none-eabi-gcc-cs-c++ arm-none-eabi-newlib ninja-build SDL2-dev
+      run: sudo apt install -y gcc-arm-none-eabi binutils-arm-none-eabi libnewlib-arm-none-eabi libsdl2-dev ninja-build
 
     # Runs a set of commands using the runners shell
     - name: Build stmnes
@@ -34,5 +34,5 @@ jobs:
       
     - name: Build nesdl
       run: |
-        cmake -B build/nesdl -G Ninja
-        cmake --build build/nesdl
+        cmake -B build/nesdl -G Ninja -DENABLED_SDL2=ON
+        cmake --build build/nesdl --target nesdl
