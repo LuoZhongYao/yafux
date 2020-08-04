@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: 
  */
 
+#include <nes.h>
 #include <logging.h>
 
 int main(void)
@@ -12,6 +13,10 @@ int main(void)
 
 	BLOGE("Booting...\n");
 
-	while (1);
+	nes_init("super.nes");
+
+	while (1) {
+		nes_eval();
+	}
 	return 0;
 }

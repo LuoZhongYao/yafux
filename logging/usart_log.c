@@ -1,7 +1,7 @@
 #include "logging.h"
 #include "stm32f10x.h"
 
-#ifdef ENABLE_LOGGING
+#ifdef CONFIG_LOGGING_USART
 void USART1_IRQHandler (void)
 {
     uint8_t dat;
@@ -37,7 +37,7 @@ int _write(int fd, char* ptr, int len)
 	return len;
 }
 
-void logging_init(void)
+static void logging_usart_init(void)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
 	USART_InitTypeDef USART_InitStructure;
@@ -80,5 +80,7 @@ void logging_init(void)
     USART_ITConfig(USART1, USART_IT_RXNE ,ENABLE);
 #endif 		
 }
+
+SYS_LOG_DEF(logging_usart_init, vprintf)
 
 #endif

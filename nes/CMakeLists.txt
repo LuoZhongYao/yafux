@@ -9,3 +9,4 @@ target_sources(nes PRIVATE
 	)
 
 target_include_directories(nes INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(nes PRIVATE logging)

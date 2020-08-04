@@ -5,9 +5,9 @@
  */
 
 #include "nes.h"
-#include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <logging.h>
 
 struct ppu ppu;
 void sdl_render(uint32_t *, unsigned);
@@ -382,23 +382,23 @@ static void ppu_y_inc(void)
 	}
 }
 
-static void nes_ppu_nametable(void)
-{
-	static uint32_t dbg_pixels[4][WIDTH * SCANLINE];
-	for (int nt = 0; nt < 4; nt++) {
-		for (int y = 0; y < SCANLINE; y++) {
-			for (int x = 0; x < WIDTH; x += 8) {
-				ppu_fetch_nametable(dbg_pixels[nt] + y * WIDTH + x, nt, y, x);
-			}
-		}
-		sdl_dbg_render(dbg_pixels[nt], WIDTH, nt);
-	}
-}
+// static void nes_ppu_nametable(void)
+// {
+// 	static uint32_t dbg_pixels[4][WIDTH * SCANLINE];
+// 	for (int nt = 0; nt < 4; nt++) {
+// 		for (int y = 0; y < SCANLINE; y++) {
+// 			for (int x = 0; x < WIDTH; x += 8) {
+// 				ppu_fetch_nametable(dbg_pixels[nt] + y * WIDTH + x, nt, y, x);
+// 			}
+// 		}
+// 		sdl_dbg_render(dbg_pixels[nt], WIDTH, nt);
+// 	}
+// }
 
 static PT_THREAD(ppu_working(int *cycle))
 {
 	uint32_t color;
-	static uint32_t pixels[WIDTH * SCANLINE];
+	static uint32_t pixels[1 + 0 * WIDTH * SCANLINE];
 	static uint32_t *pix;
 	PT_BEGIN(&ppu.pt);
 

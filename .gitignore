@@ -9,7 +9,9 @@
 *.out
 *.nes
 compile_flags.txt
+compile_commands.json
 .vscode
+.clangd/
 GPATH
 GRTAGS
 GTAGS

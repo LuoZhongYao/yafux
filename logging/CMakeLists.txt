@@ -4,4 +4,5 @@ target_link_libraries(logging PRIVATE stm32)
 target_sources(logging PRIVATE 
 	led_log.c
 	usart_log.c
+	semihosting_log.c
 	)
