@@ -15,7 +15,7 @@
 #include "mapper.h"
 
 void nes_eval(void);
-void nes_init(const char *rom);
+void nes_init(const uint8_t *rom);
 
 extern struct mapper *mapper;
 

@@ -24,9 +24,9 @@ struct mapper_ops {
 
 struct mapper {
 	uint8_t *nt;
-	uint8_t *prg;
-	uint8_t *chr;
-	struct ines_hdr hdr;
+	const uint8_t *prg;
+	const uint8_t *chr;
+	const struct ines_hdr *hdr;
 	const struct mapper_ops *ops;
 };
 

@@ -5,4 +5,5 @@ target_sources(logging PRIVATE
 	led_log.c
 	usart_log.c
 	semihosting_log.c
+	${CMAKE_SOURCE_DIR}/_syscalls.c
 	)

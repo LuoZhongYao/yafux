@@ -10,7 +10,7 @@ int main(void)
 {
 	SYS_LOG_INIT();
 
-	BLOGE("Booting...\n");
+	BLOGE("\nBooting...\n");
 
 	while (1);
 	return 0;

@@ -26,28 +26,31 @@ static union {
 static uint8_t mapper_generic_prg_read(struct mapper *mapper, uint16_t addr)
 {
 	addr &= 0x7fff;
-	if (mapper->hdr.prg < 2) {
+	if (mapper->hdr->prg < 2) {
 		addr &= 0x3fff;
 	}
 
 	return mapper->prg[addr];
 }
 
+/*
 static void mapper_generic_prg_write(struct mapper *mapper, uint16_t addr, uint8_t val)
 {
 	addr &= 0x7fff;
-	if (mapper->hdr.prg < 2) {
+	if (mapper->hdr->prg < 2) {
 		addr &= 0x3fff;
 	}
 
 	mapper->prg[addr] = val;
 }
 
+*/
+
 static uint8_t mapper_generic_nt_read(struct mapper *mapper, uint16_t addr)
 {
 	addr &= 0xfff;
-	if (!(mapper->hdr.flag6 & 0x08)) {
-		if (mapper->hdr.flag6 & 1) {
+	if (!(mapper->hdr->flag6 & 0x08)) {
+		if (mapper->hdr->flag6 & 1) {
 			addr = (addr & 0x7ff);
 		} else {
 			addr = (addr & 0x3ff) | ((addr & 0x800) >> 1);
@@ -60,8 +63,8 @@ static uint8_t mapper_generic_nt_read(struct mapper *mapper, uint16_t addr)
 static void mapper_generic_nt_write(struct mapper *mapper, uint16_t addr, uint8_t val)
 {
 	addr &= 0xfff;
-	if (!(mapper->hdr.flag6 & 0x08)) {
-		if (mapper->hdr.flag6 & 1) {
+	if (!(mapper->hdr->flag6 & 0x08)) {
+		if (mapper->hdr->flag6 & 1) {
 			addr = (addr & 0x7ff);
 		} else {
 			addr = (addr & 0x3ff) | ((addr & 0x800) >> 1);
@@ -76,16 +79,18 @@ static uint16_t mapper_generic_chr_read(struct mapper *mapper, uint16_t addr)
 	return mapper->chr[addr & 0x1fff] | mapper->chr[(addr + 8) & 0x1fff] << 8;
 }
 
+/*
 static void mapper_generic_chr_write(struct mapper *mapper, uint16_t addr, uint8_t val)
 {
 	mapper->chr[addr & 0x1fff] = val;
 }
+*/
 
 static void mapper3_prg_write(struct mapper *mapper, uint16_t addr, uint8_t val)
 {
 	struct mapper3 *mapper3 = container_of(mapper, struct mapper3, mapper);
 	printf("MAPPER3 PRG Write: %04x, %02x\n", addr, val);
-	if ((val & 3) < mapper->hdr.chr)
+	if ((val & 3) < mapper->hdr->chr)
 		mapper3->chr_bank = val & 3;
 }
 

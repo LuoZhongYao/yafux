@@ -23,7 +23,7 @@ struct ines_hdr {
 	uint8_t unused[5];
 };
 
-struct mapper *nes_rom_load(const char *file);
+struct mapper *nes_rom_load(const uint8_t *file);
 void nes_rom_unload(struct mapper *mapper);
 
 #endif /* __ROM_H__*/

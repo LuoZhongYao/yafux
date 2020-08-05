@@ -10,11 +10,12 @@ struct mapper *mapper = NULL;
 static int cpu_cycle;
 static int ppu_cycle;
 
-void nes_init(const char *rom)
+void nes_init(const uint8_t *rom)
 {
 	mapper = nes_rom_load(rom);
 	if (mapper == NULL)
 		return;
+
 	nes_cpu_init();
 	nes_ppu_init();
 }

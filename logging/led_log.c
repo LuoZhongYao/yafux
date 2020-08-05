@@ -29,6 +29,6 @@ static int logging_led_print(const char *fmt, va_list ap)
 	return 0;
 }
 
-SYS_LOG_DEF(logging_led_init, logging_led_print)
+SYS_LOG_DEF(logging_led_init, logging_led_print);
 
 #endif
