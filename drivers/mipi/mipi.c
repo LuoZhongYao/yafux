@@ -3,38 +3,23 @@
  *
  * SPDX-License-Identifier:
  */
-#include "lcd.h"
+#include "mipi.h"
 #include "stm32f10x.h"
 #include <logging.h>
 
 extern void delay(unsigned ms);
-/* TFT地址结构体 */
 typedef volatile struct
 {
 	uint16_t reg;
 	uint16_t data;
-} LCD_TypeDef;
+} mipi_TypeDef;
 
 /* 使用NOR/SRAM的 Bank1.sector4,地址位HADDR[27,26]=11 A10作为数据命令区分线 */
 /* 注意设置时STM32内部会右移一位对其! 111110=0X3E */
-#define LCD_BASE        ((uint32_t)(0x6C000000 | 0x000007FE))
-#define TFT             ((LCD_TypeDef *) LCD_BASE)
+#define mipi_BASE        ((uint32_t)(0x6C000000 | 0x000007FE))
+#define TFT             ((mipi_TypeDef *) mipi_BASE)
 
-/* 定义屏的大小 */
-#define LCD_XMAX 239		//设置TFT屏的大小
-#define LCD_YMAX 399
-
-/* 定义颜色的宏 */
-#define WHITE          0xFFFF
-#define BLACK          0x0000
-#define BLUE           0x001F
-#define RED            0xF800
-#define MAGENTA        0xF81F
-#define GREEN          0x07E0
-#define CYAN           0x7FFF
-#define YELLOW         0xFFE0		 //定义颜色的宏
-
-static void LCD_GPIO_Config(void)
+static void mipi_gpio_config(void)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -63,7 +48,7 @@ static void LCD_GPIO_Config(void)
 	GPIO_Init(GPIOE, &GPIO_InitStructure);
 }
 
-static void LCD_FSMC_Config(void)
+static void mipi_fsmc_config(void)
 {
 	FSMC_NORSRAMInitTypeDef  FSMC_NORSRAMInitStructure;
 	FSMC_NORSRAMTimingInitTypeDef  FSMC_ReadTimingInitStructure; 
@@ -108,10 +93,9 @@ static void LCD_FSMC_Config(void)
 	FSMC_NORSRAMInit(&FSMC_NORSRAMInitStructure);  //初始化FSMC配置
 
 	FSMC_NORSRAMCmd(FSMC_Bank1_NORSRAM4, ENABLE);  // 使能BANK1 
-
 }
 
-static inline void LCD_data_write(const uint16_t *data, unsigned size)
+void mipi_data_write(const uint16_t *data, unsigned size)
 {
 	unsigned i;
 	for (i = 0; i < size; i++) {
@@ -119,7 +103,7 @@ static inline void LCD_data_write(const uint16_t *data, unsigned size)
 	}
 }
 
-static inline void LCD_data_read(uint16_t *data, unsigned size)
+void mipi_data_read(uint16_t *data, unsigned size)
 {
 	unsigned i;
 	for (i = 0; i < size; i++) {
@@ -127,64 +111,26 @@ static inline void LCD_data_read(uint16_t *data, unsigned size)
 	}
 }
 
-static inline void LCD_reg_write(uint16_t reg)
+void mipi_reg_write(uint16_t reg)
 {
 	TFT->reg = reg;
 }
 
-static void lcd_write(uint16_t reg, const uint16_t *data, unsigned size)
+void mipi_init(void)
 {
-	LCD_reg_write(reg);
-	LCD_data_write(data, size);
+	mipi_gpio_config();
+	mipi_fsmc_config();
 }
 
-#define LCD_WRITE_ARRAY(reg, ...)				\
-	do {										\
-		uint16_t _buf[] = {__VA_ARGS__};		\
-		lcd_write(reg, _buf, sizeof(_buf) / sizeof(uint16_t));	\
-	} while (0)
-
-static void lcd_write16(uint16_t reg, uint16_t val)
+void mipi_write(uint16_t reg, const uint16_t *data, unsigned size)
 {
-	lcd_write(reg, &val, 1);
+	mipi_reg_write(reg);
+	mipi_data_write(data, size);
 }
 
-static void lcd_read(uint16_t reg, uint16_t *data, unsigned size)
+void mipi_read(uint16_t reg, uint16_t *data, unsigned size)
 {
-	LCD_reg_write(reg);
-	LCD_data_read(data, size);
+	mipi_reg_write(reg);
+	mipi_data_read(data, size);
 }
 
-void lcd_init(void)
-{
-	uint16_t val;
-	uint16_t buf[15];
-
-	LCD_GPIO_Config();
-	LCD_FSMC_Config();
-
-	delay(50);
-
-	lcd_read(0xd0, &val, 1);
-	lcd_read(0xd0, &val, 1);
-	BLOGD("Chip ID: %x\n", val);
-
-	LCD_WRITE_ARRAY(0xe9, 0x20);
-	LCD_reg_write(0x11);
-	delay(50);
-
-	LCD_WRITE_ARRAY(0x3a, 0x55);
-
-	LCD_WRITE_ARRAY(0xd1, 0x00, 0x65, 0x1f);
-	LCD_WRITE_ARRAY(0xd0, 0x07, 0x07, 0x80);
-	LCD_WRITE_ARRAY(0x36, 0x4c);
-	LCD_WRITE_ARRAY(0xc1, 0x10, 0x10, 0x02, 0x02);
-	LCD_WRITE_ARRAY(0xc0, 0x00, 0x35, 0x00, 0x00, 0x01, 0x02);
-	LCD_WRITE_ARRAY(0xc4, 0x03);
-	LCD_WRITE_ARRAY(0xc5, 0x01);
-	LCD_WRITE_ARRAY(0xd2, 0x01, 0x22);
-	LCD_WRITE_ARRAY(0xe7, 0x38);
-	LCD_WRITE_ARRAY(0xf3, 0x08, 0x12, 0x12, 0x08);
-	LCD_WRITE_ARRAY(0xc8, 0x01, 0x52, 0x37, 0x10, 0x0d, 0x01, 0x04, 0x51, 0x77, 0x01, 0x01, 0x0d, 0x08, 0x80, 0x00);
-	LCD_WRITE_ARRAY(0x29);
-}

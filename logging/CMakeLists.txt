@@ -1,9 +1,10 @@
 add_library(logging)
-target_include_directories(logging PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_sources(logging PRIVATE logging.c)
 target_link_libraries(logging PRIVATE stm32)
-target_sources(logging PRIVATE 
-	led_log.c
-	usart_log.c
-	semihosting_log.c
-	${CMAKE_SOURCE_DIR}/_syscalls.c
-	)
+target_include_directories(logging PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+target_sources_if_kconfig(logging PRIVATE logging.c)
+target_sources_if_kconfig(logging PRIVATE logging_led.c)
+target_sources_if_kconfig(logging PRIVATE logging_usart.c)
+target_sources_if_kconfig(logging PRIVATE logging_semihosting.c)
+target_sources_ifdef(CONFIG_LOGGING_USART logging PRIVATE _syscalls.c)

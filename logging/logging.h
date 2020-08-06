@@ -23,35 +23,13 @@ struct log_module {
 	int (*print)(const char *fmt, va_list ap);
 };
 
+void logging_init(void);
+void logging_print(int level, const char *fmt, ...);
 
-extern struct log_module __start_log_backend;
-extern struct log_module __stop_log_backend;
-
-static inline void logging_init(void)
-{
-	struct log_module *log;
-
-	for (log = &__start_log_backend; log < &__stop_log_backend; log++) {
-		log->init();
-	}
-}
-
-static inline void logging_print(int level, const char *fmt, ...)
-{
-	va_list ap;
-	struct log_module *log;
-
-	va_start(ap, fmt);
-
-	for (log = &__start_log_backend; log < &__stop_log_backend; log++) {
-		log->print(fmt, ap);
-	}
-
-	va_end(ap);
-}
-
-# define SYS_LOG_DEF(log_init, log_print)	\
-	static const struct log_module __attribute__((section("log_backend"))) __log_backend_##__LINE__ = {.init = log_init, .print = log_print}
+#define _LOG_NAME(log, suffix) __log_backed_##log##_##suffix
+#define LOG_NAME(log, suffix)	_LOG_NAME(log, suffix)
+#define SYS_LOG_DEF(log_init, log_print)	\
+	static const struct log_module __attribute__((section("log_backend"), used)) LOG_NAME(log_init, __LINE__) = {.init = log_init, .print = log_print}
 #define SYS_LOG_INIT() logging_init()
 #define SYS_LOG_PRINT(level, fmt, ...) do {	\
 	if (level <= CONFIG_LOGGING_LEVEL) {				\

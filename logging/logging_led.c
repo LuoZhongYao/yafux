@@ -20,7 +20,7 @@ static void logging_led_init(void)
     GPIOC->ODR |= 0xFF00;
 }
 
-static int logging_led_print(const char *fmt, va_list ap)
+static int __attribute__((used)) logging_led_print(const char *fmt, va_list ap)
 {
     /* 设置LED灯的状态, GPIO一次设置16位，将其值强制转换位16位 */
     GPIOC->BSRR = fmt[0] & 0x00FF;

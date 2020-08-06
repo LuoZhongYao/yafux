@@ -9,7 +9,7 @@
 
 #ifdef CONFIG_LOGGING_SEMIHOSTING
 
-static void semihosting_log_init(void)
+static __attribute__((used)) void semihosting_log_init(void)
 {
 	;
 }

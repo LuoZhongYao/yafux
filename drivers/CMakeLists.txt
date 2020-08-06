@@ -1,0 +1,2 @@
+add_subdirectory_if_kconfig(lcd)
+add_subdirectory_if_kconfig(mipi)

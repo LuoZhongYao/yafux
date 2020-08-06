@@ -1,0 +1,60 @@
+function(add_subdirectory_ifdef feature_toggle dir)
+  if(${${feature_toggle}})
+    add_subdirectory(${dir})
+  endif()
+endfunction()
+
+function(target_sources_ifdef feature_toggle target scope item)
+  if(${${feature_toggle}})
+    target_sources(${target} ${scope} ${item} ${ARGN})
+  endif()
+endfunction()
+
+function(target_compile_definitions_ifdef feature_toggle target scope item)
+  if(${${feature_toggle}})
+    target_compile_definitions(${target} ${scope} ${item} ${ARGN})
+  endif()
+endfunction()
+
+function(target_include_directories_ifdef feature_toggle target scope item)
+  if(${${feature_toggle}})
+    target_include_directories(${target} ${scope} ${item} ${ARGN})
+  endif()
+endfunction()
+
+function(target_link_libraries_ifdef feature_toggle target item)
+  if(${${feature_toggle}})
+    target_link_libraries(${target} ${item} ${ARGN})
+  endif()
+endfunction()
+
+function(add_compile_option_ifdef feature_toggle option)
+  if(${${feature_toggle}})
+    add_compile_options(${option})
+  endif()
+endfunction()
+
+function(target_compile_option_ifdef feature_toggle target scope option)
+  if(${feature_toggle})
+    target_compile_options(${target} ${scope} ${option})
+  endif()
+endfunction()
+
+function(target_cc_option_ifdef feature_toggle target scope option)
+  if(${feature_toggle})
+    target_cc_option(${target} ${scope} ${option})
+  endif()
+endfunction()
+
+
+
+function(add_subdirectory_if_kconfig dir)
+  string(TOUPPER config_${dir} UPPER_CASE_CONFIG)
+  add_subdirectory_ifdef(${UPPER_CASE_CONFIG} ${dir})
+endfunction()
+
+function(target_sources_if_kconfig target scope item)
+  get_filename_component(item_basename ${item} NAME_WE)
+  string(TOUPPER CONFIG_${item_basename} UPPER_CASE_CONFIG)
+  target_sources_ifdef(${UPPER_CASE_CONFIG} ${target} ${scope} ${item})
+endfunction()

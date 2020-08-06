@@ -1,7 +1,6 @@
-add_subdirectory(led)
 add_subdirectory(nes)
 add_subdirectory(logging)
 
-if(ENABLED_SDL2)
+if(CONFIG_SDL2)
 	add_subdirectory(sdl)
-endif(ENABLED_SDL2)
+endif(CONFIG_SDL2)

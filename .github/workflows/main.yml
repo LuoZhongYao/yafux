@@ -34,5 +34,5 @@ jobs:
       
     - name: Build nesdl
       run: |
-        cmake -B build/nesdl -G Ninja -DENABLED_SDL2=ON
+        cmake -B build/nesdl -G Ninja -DCONFIG_SDL2=ON
         cmake --build build/nesdl --target nesdl
