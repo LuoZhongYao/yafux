@@ -1,3 +1,4 @@
+option(CONFIG_STM32 "Enable STM32" OFF)
 option(CONFIG_SDL2 "Enable SDL2" OFF)
 option(CONFIG_LOGGING "Enable logging" OFF)
 option(CONFIG_MIPI "Enable MIPI Interface" OFF)
