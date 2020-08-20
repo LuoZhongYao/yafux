@@ -1,6 +1,7 @@
 project(stm32)
 cmake_minimum_required(VERSION 3.9)
-set(CMAKE_C_FLAGS_DEBUG "-g")
+# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g -pg")
 
 include(config.cmake)
 include(cmake/extensions.cmake)

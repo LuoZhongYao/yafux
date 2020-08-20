@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: 
  */
 #include "mapper.h"
-#include <stdio.h>
+#include <logging.h>
 #include <stddef.h>
 
 #ifndef container_of
@@ -89,7 +89,7 @@ static void mapper_generic_chr_write(struct mapper *mapper, uint16_t addr, uint8
 static void mapper3_prg_write(struct mapper *mapper, uint16_t addr, uint8_t val)
 {
 	struct mapper3 *mapper3 = container_of(mapper, struct mapper3, mapper);
-	printf("MAPPER3 PRG Write: %04x, %02x\n", addr, val);
+	BLOGD("MAPPER3 PRG Write: %04x, %02x\n", addr, val);
 	if ((val & 3) < mapper->hdr->chr)
 		mapper3->chr_bank = val & 3;
 }

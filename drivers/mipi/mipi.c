@@ -12,12 +12,12 @@ typedef volatile struct
 {
 	uint16_t reg;
 	uint16_t data;
-} mipi_TypeDef;
+} MIPI_TypeDef;
 
 /* 使用NOR/SRAM的 Bank1.sector4,地址位HADDR[27,26]=11 A10作为数据命令区分线 */
 /* 注意设置时STM32内部会右移一位对其! 111110=0X3E */
-#define mipi_BASE        ((uint32_t)(0x6C000000 | 0x000007FE))
-#define TFT             ((mipi_TypeDef *) mipi_BASE)
+#define MIPI_BASE        ((uint32_t)(0x6C000000 | 0x000007FE))
+#define TFT             ((volatile MIPI_TypeDef *) MIPI_BASE)
 
 static void mipi_gpio_config(void)
 {

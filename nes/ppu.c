@@ -5,13 +5,21 @@
  */
 
 #include "nes.h"
+#include <config.h>
 #include <string.h>
 #include <stdbool.h>
 #include <logging.h>
 
 struct ppu ppu;
-void sdl_render(uint32_t *, unsigned);
-void sdl_dbg_render(uint32_t *, unsigned, unsigned);
+typedef uint16_t color_t;
+
+#if defined(CONFIG_SDL2)
+void sdl_render(uint16_t *, unsigned);
+void sdl_dbg_render(uint16_t *, unsigned, unsigned);
+#define COLOR(n)	(color_t)~n
+#else
+#define COLOR(n)	n
+#endif
 
 #define HBLANK	85
 
@@ -49,16 +57,17 @@ static union {
 
 static uint8_t spr_count = 0;
 static struct sprite *secondary_spr[8];
+static color_t colors[32];
 
-static const uint32_t palette[64] = {
-	0x757575, 0x271B8F, 0x0000AB, 0x47009F, 0x8F0077, 0xAB0013, 0xA70000, 0x7F0B00,
-	0x432F00, 0x004700, 0x005100, 0x003F17, 0x1B3F5F, 0x000000, 0x000000, 0x000000,
-	0xBCBCBC, 0x0073EF, 0x233BEF, 0x8300F3, 0xBF00BF, 0xE7005B, 0xDB2B00, 0xCB4F0F,
-	0x8B7300, 0x009700, 0x00AB00, 0x00933B, 0x00838B, 0x000000, 0x000000, 0x000000,
-	0xFFFFFF, 0x3FBFFF, 0x5F97FF, 0xA78BFD, 0xF77BFF, 0xFF77B7, 0xFF7763, 0xFF9B3B,
-	0xF3BF3F, 0x83D313, 0x4FDF4B, 0x58F898, 0x00EBDB, 0x000000, 0x000000, 0x000000,
-	0xFFFFFF, 0xABE7FF, 0xC7D7FF, 0xD7CBFF, 0xFFC7FF, 0xFFC7DB, 0xFFBFB3, 0xFFDBAB,
-	0xFFE7A3, 0xE3FFA3, 0xABF3BF, 0xB3FFCF, 0x9FFFF3, 0x000000, 0x000000, 0x000000,
+static const color_t palette[64] = {
+	COLOR(0x8c51), COLOR(0xdf2e), COLOR(0xffea), COLOR(0xbfec), COLOR(0x77f1), COLOR(0x57fd), COLOR(0x5fff), COLOR(0x87bf), 
+	COLOR(0xbe9f), COLOR(0xfddf), COLOR(0xfd7f), COLOR(0xfe1d), COLOR(0xe614), COLOR(0xffff), COLOR(0xffff), COLOR(0xffff), 
+	COLOR(0x4208), COLOR(0xfc62), COLOR(0xde22), COLOR(0x7fe1), COLOR(0x47e8), COLOR(0x1ff4), COLOR(0x26bf), COLOR(0x359e), 
+	COLOR(0x747f), COLOR(0xfb5f), COLOR(0xfabf), COLOR(0xfb78), COLOR(0xfbee), COLOR(0xffff), COLOR(0xffff), COLOR(0xffff), 
+	COLOR(0x0000), COLOR(0xc200), COLOR(0xa340), COLOR(0x5ba0), COLOR(0x0c20), COLOR(0x0449), COLOR(0x0453), COLOR(0x0338), 
+	COLOR(0x0a18), COLOR(0x797d), COLOR(0xb116), COLOR(0xa02c), COLOR(0xf8a4), COLOR(0xffff), COLOR(0xffff), COLOR(0xffff), 
+	COLOR(0x0000), COLOR(0x50c0), COLOR(0x3940), COLOR(0x29a0), COLOR(0x01c0), COLOR(0x01c4), COLOR(0x0209), COLOR(0x012a), 
+	COLOR(0x00cb), COLOR(0x180b), COLOR(0x5068), COLOR(0x4806), COLOR(0x6001), COLOR(0xffff), COLOR(0xffff), COLOR(0xffff),
 };
 
 static inline uint8_t ppu_fetch_sprite(int scanline, int pixel, uint8_t *attr)
@@ -160,7 +169,7 @@ static void fetch_sprite(void)
 	}
 }
 
-static void render_scanline_sprite(uint32_t *pixels)
+static void render_scanline_sprite(color_t *pixels)
 {
 	int vofs;
 	int vadr;
@@ -206,14 +215,16 @@ static void render_scanline_sprite(uint32_t *pixels)
 			}
 
 			if (!(spr->attr & SP_BACK)) {
-				pixels[spr->x + no] = palette[ppu.pale[(high | low) + 0x10]];
+				//pixels[spr->x + no] = palette[ppu.pale[(high | low) + 0x10]];
+				pixels[spr->x + no] = colors[(high | low) + 0x10];
 			}
 		}
 	}
 }
 
-static void render_scanline_tile(uint32_t *pixels, uint8_t off, uint8_t size)
+static void render_scanline_tile(color_t *pixels, uint8_t off, uint8_t size)
 {
+	uint8_t low;
 	uint8_t name = mapper_nt_read(mapper, 0x2000 | (ppu.v & 0x0fff));
 	uint8_t attr = mapper_nt_read(mapper, 0x23C0 | (ppu.v & 0x0C00) | ((ppu.v >> 4) & 0x38) | ((ppu.v >> 2) & 0x07));
 	uint16_t bgrd = (name << 4) + (ppu.scanline & 7) + ((ppu.ctrl & 0x10) ? 0x1000 : 0);
@@ -225,10 +236,22 @@ static void render_scanline_tile(uint32_t *pixels, uint8_t off, uint8_t size)
 		attr >>= 2;
 	attr = (attr & 3) << 2;
 
-	for (; off < size; off++) {
-		uint8_t low = ((C >> (7 - off)) & 1) | ((C >> (14 - off)) & 2);
-		*pixels++ = palette[ppu.pale[low ? (attr | low) : 0]];
+#define _(n)	case n: do {								\
+	low = ((C >> (7 - off)) & 1) | ((C >> (14 - off)) & 2);	\
+	*pixels++ = colors[low ? (attr | low) : 0];				\
+	off++;													\
+} while(0)
+	switch (size - off) {
+		_(8); _(7); _(6); _(5);
+		_(4); _(3); _(2); _(1);
 	}
+#undef _
+
+	// for (; off < size; off++) {
+	// 	uint8_t low = ((C >> (7 - off)) & 1) | ((C >> (14 - off)) & 2);
+	// 	//*pixels++ = palette[ppu.pale[low ? (attr | low) : 0]];
+	// 	*pixels++ = colors[low ? (attr | low) : 0];
+	// }
 }
 
 static void ppu_vram_put(uint16_t addr, uint8_t val)
@@ -244,20 +267,25 @@ static void ppu_vram_put(uint16_t addr, uint8_t val)
 		case 0x00:
 		case 0x10:
 			ppu.pale[0x00] = ppu.pale[0x10] = val;
+			colors[0x00] = colors[0x10] = palette[val];
 		break;
 		case 0x04:
 		case 0x14:
 			ppu.pale[0x04] = ppu.pale[0x14] = val;
+			colors[0x04] = colors[0x14] = palette[val];
 		break;
 		case 0x08:
 		case 0x18:
 			ppu.pale[0x08] = ppu.pale[0x18] = val;
+			colors[0x08] = colors[0x18] = palette[val];
 		break;
 		case 0x0c:
 		case 0x1c:
 			ppu.pale[0x0c] = ppu.pale[0x1c] = val;
+			colors[0x0c] = colors[0x1c] = palette[val];
 		break;
 		default:
+			colors[addr & 0x1f] = palette[val];
 			ppu.pale[addr & 0x1f] = val;
 		break;
 		}
@@ -397,14 +425,23 @@ static void ppu_y_inc(void)
 
 static PT_THREAD(ppu_working(int *cycle))
 {
-	uint32_t color;
-	static uint32_t pixels[1 + 0 * WIDTH * SCANLINE];
-	static uint32_t *pix;
+#if defined(CONFIG_SDL2)
+	static color_t *pixels;
+	static color_t _pixels[SCANLINE * WIDTH];
+#else
+	static color_t pixels[WIDTH];
+#endif
 	PT_BEGIN(&ppu.pt);
 
 #define RETURN(n) do {*cycle = (n); PT_YIELD(&ppu.pt);} while (0)
 
 	while (1) {
+#if !defined(CONFIG_SDL2)
+		static uint32_t now;
+		extern volatile uint32_t jiffies;
+		now = jiffies;
+		lcd_set_window(0, 0, SCANLINE, WIDTH);
+#endif
 		ppu.status &= ~(ST_SPR_OVERFLOW | ST_VBLANK | ST_SPR0_HIT);
 		/* pre-render scanline */
 		RETURN(280);
@@ -415,29 +452,31 @@ static PT_THREAD(ppu_working(int *cycle))
 
 			fetch_sprite();
 
-			pix = pixels + (ppu.scanline << 8);
+#if defined(CONFIG_SDL2)
+			pixels = _pixels + (ppu.scanline << 8);
+#endif
 			if (PPU_IS_SHOW_BACKGROUND()) {
-				render_scanline_tile(pix, ppu.x, 8 - ppu.x);
+				render_scanline_tile(pixels, ppu.x, 8 - ppu.x);
 				ppu_coarse_x_inc();
 			}
 			RETURN(8 - ppu.x);
 
 			for (ppu.dot = 8 - ppu.x; ppu.dot < (WIDTH - ppu.x); ppu.dot+=8) {
 				if (PPU_IS_SHOW_BACKGROUND()) {
-					render_scanline_tile(pix + ppu.dot, 0, 8);
+					render_scanline_tile(pixels + ppu.dot, 0, 8);
 					ppu_coarse_x_inc();
 				}
 				RETURN(8);
 			}
 
 			if (PPU_IS_SHOW_BACKGROUND()) {
-				render_scanline_tile(pix + ppu.dot, 0, ppu.x);
+				render_scanline_tile(pixels + ppu.dot, 0, ppu.x);
 				ppu_coarse_x_inc();
 			}
 			RETURN(ppu.x);
 
 			if (PPU_IS_SHOW_SPR()) {
-				render_scanline_sprite(pix);
+				render_scanline_sprite(pixels);
 			}
 
 			if (PPU_IS_SHOW_BACKGROUND()) {
@@ -450,6 +489,9 @@ static PT_THREAD(ppu_working(int *cycle))
 				ppu.v = (ppu.v & ~0x41f) | (ppu.t & 0x41f);
 			}
 
+#if !defined(CONFIG_SDL2)
+			lcd_draw(pixels, WIDTH);
+#endif
 			RETURN(HBLANK - 1);
 		}
 
@@ -463,7 +505,11 @@ static PT_THREAD(ppu_working(int *cycle))
 		}
 
 		// nes_ppu_nametable();
-		sdl_render(pixels, WIDTH);
+#if defined(CONFIG_SDL2)
+		sdl_render(_pixels, WIDTH);
+#else
+		BLOGD("%d\n", jiffies - now);
+#endif
 		while (ppu.scanline++ < SCANLINE + 20) {
 			RETURN(WIDTH + HBLANK);
 		}
@@ -481,6 +527,7 @@ int nes_ppu_eval(void)
 
 void nes_ppu_init(void)
 {
+	memset(&ppu, 0, sizeof(ppu));
 	PT_INIT(&ppu.pt);
 	ppu.w = 0;
 }

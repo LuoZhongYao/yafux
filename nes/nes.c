@@ -23,11 +23,11 @@ void nes_init(const uint8_t *rom)
 void nes_eval(void)
 {
 	if (--ppu_cycle <= 0) {
-		ppu_cycle = nes_ppu_eval();
+	  ppu_cycle = nes_ppu_eval();
 	}
 
 	if (--cpu_cycle <= 0) {
-		cpu_cycle = nes_cpu_eval() * 3;
+	  cpu_cycle = nes_cpu_eval() * 3;
 	}
 }
 

@@ -7,9 +7,13 @@
 #include "nes.h"
 #include <errno.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <stdbool.h>
 #include <SDL2/SDL.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/timerfd.h>
+#include <logging.h>
 
 #define SPR_WIDTH	8
 #define SPR_HIGHT	8
@@ -24,39 +28,39 @@ static SDL_Renderer *dbg_ren;
 static SDL_Texture *dbg_texture;
 static unsigned keystate;
 
-void sdl_render(uint32_t *pixels, unsigned nr)
+void sdl_render(uint16_t *pixels, unsigned nr)
 {
 	SDL_RenderClear(ren);
-	SDL_UpdateTexture(bgr_texture, NULL, pixels, nr * sizeof(uint32_t));
+	SDL_UpdateTexture(bgr_texture, NULL, pixels, nr * sizeof(uint16_t));
 	SDL_RenderCopy(ren, bgr_texture, NULL, NULL);
 	SDL_RenderPresent(ren);
 }
 
-void sdl_dbg_render(uint32_t *pixels, unsigned nr, unsigned nt)
+void sdl_dbg_render(uint16_t *pixels, unsigned nr, unsigned nt)
 {
-	SDL_Rect rect = {
-		.w = 256,
-		.h = 240,
-		.x = 256 * (nt & 1),
-		.y = 240 * ((nt >> 1) & 1)
-	};
+	// SDL_Rect rect = {
+	// 	.w = 256,
+	// 	.h = 240,
+	// 	.x = 256 * (nt & 1),
+	// 	.y = 240 * ((nt >> 1) & 1)
+	// };
 
-	if (nt == 0) {
-		SDL_RenderClear(dbg_ren);
-	}
-	SDL_UpdateTexture(dbg_texture, &rect, pixels, nr * sizeof(uint32_t));
+	// if (nt == 0) {
+	// 	SDL_RenderClear(dbg_ren);
+	// }
+	// SDL_UpdateTexture(dbg_texture, &rect, pixels, nr * sizeof(uint32_t));
 
-	if (nt == 3) {
-		SDL_RenderCopy(dbg_ren, dbg_texture, NULL, NULL);
-		SDL_RenderPresent(dbg_ren);
-	}
+	// if (nt == 3) {
+	// 	SDL_RenderCopy(dbg_ren, dbg_texture, NULL, NULL);
+	// 	SDL_RenderPresent(dbg_ren);
+	// }
 }
 
 static void sdl_debug_init(void)
 {
 	dbg_win = SDL_CreateWindow("Debug", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 2 * WIDTH, 2 * SCANLINE, SDL_WINDOW_SHOWN);
 	dbg_ren = SDL_CreateRenderer(dbg_win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-	dbg_texture = SDL_CreateTexture(dbg_ren, SDL_PIXELFORMAT_ARGB8888,
+	dbg_texture = SDL_CreateTexture(dbg_ren, SDL_PIXELFORMAT_RGB565,
 		SDL_TEXTUREACCESS_STREAMING, 2 * WIDTH, 2 * SCANLINE);
 }
 
@@ -67,7 +71,7 @@ static void sdl_init(void)
 
 	win = SDL_CreateWindow("Nes", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, SCANLINE, SDL_WINDOW_SHOWN);
 	ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-	bgr_texture = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888,
+	bgr_texture = SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGB565,
 		SDL_TEXTUREACCESS_STREAMING, WIDTH, SCANLINE);
 }
 
@@ -107,15 +111,34 @@ static void sdl_handle_input(SDL_Event *ev)
 
 int main(int argc, char **argv)
 {
+	int fd;
 	int timerfd;
 	uint64_t expired;
+	struct stat stbuf;
 	bool quit = false;
 	struct itimerspec it;
 	SDL_Event ev;
+	uint8_t *raw;
 
-	nes_init(argv[1]);
+	if (argc < 2) {
+		BLOGE("Usage: %s <rom>\n", argv[0]);
+		return -1;
+	}
+
+	fd = open(argv[1], O_RDONLY);
+	if (fd < 0) {
+		BLOGE("open %s: %s\n", argv[1], strerror(errno));
+		return -1;
+	}
+
+	fstat(fd, &stbuf);
+	raw = malloc(stbuf.st_size);
+	read(fd, raw, stbuf.st_size);
+	close(fd);
+
+	nes_init(raw);
 	sdl_init();
-	sdl_debug_init();
+	//sdl_debug_init();
 
 	it.it_value.tv_sec = 0;
 	it.it_value.tv_nsec = 47;
@@ -149,5 +172,6 @@ int main(int argc, char **argv)
 	}
 
 	sdl_destroy();
+	free(raw);
 	return 0;
 }

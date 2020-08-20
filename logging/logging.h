@@ -24,7 +24,7 @@ struct log_module {
 };
 
 void logging_init(void);
-void logging_print(int level, const char *fmt, ...);
+void logging_print(int level, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
 
 #define _LOG_NAME(log, suffix) __log_backed_##log##_##suffix
 #define LOG_NAME(log, suffix)	_LOG_NAME(log, suffix)

@@ -1,6 +1,8 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
 
+#define ON 1
+#cmakedefine CONFIG_SDL2 @CONFIG_SDL2@
 #cmakedefine CONFIG_LOGGING @CONFIG_LOGGING@
 #cmakedefine CONFIG_LOGGING_LEVEL @CONFIG_LOGGING_LEVEL@
 #cmakedefine CONFIG_LOGGING_LED @CONFIG_LOGGING_LED@

@@ -18,6 +18,7 @@ struct mapper *nes_rom_load(const uint8_t *raw)
 	int chr, prg;
 	const uint8_t *ptr;
 	struct mapper *mapper;
+	static uint8_t nt[0x1000];
 	const struct ines_hdr *hdr = (const struct ines_hdr *)raw;
 
 	if (memcmp(hdr->nes, (uint8_t[]){'N', 'E', 'S', 0x1a}, 4)) {
@@ -48,6 +49,7 @@ struct mapper *nes_rom_load(const uint8_t *raw)
 		ptr = raw + 16 + 512;
 	}
 
+	mapper->nt = nt;
 	mapper->prg = ptr;
 	ptr += prg * 0x4000;
 	mapper->chr = ptr;
