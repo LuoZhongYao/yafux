@@ -64,7 +64,7 @@ static void logging_usart_init(void)
 #endif
 
 	/* 设置USART的参数 */
-	USART_InitStructure.USART_BaudRate = 115200;                  //波特率
+	USART_InitStructure.USART_BaudRate = 1000000;                  //波特率
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;     //数据长8位
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;          //1位停止位
 	USART_InitStructure.USART_Parity = USART_Parity_No;             //无效验

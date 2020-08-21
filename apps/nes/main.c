@@ -12,7 +12,7 @@
 extern const unsigned char raw_rom[];
 volatile uint32_t jiffies;
 
-void SysTick_Handler(void)
+void OSA_SysTick_Handler(void)
 {
 	jiffies++;
 }
@@ -34,6 +34,7 @@ void delay(unsigned ms)
 
 int main(void)
 {
+	uint32_t timer;
 	SYS_LOG_INIT();
 	BLOGD("Booting...\n");
 
@@ -44,9 +45,12 @@ int main(void)
 	nes_init(raw_rom);
 	BLOGD("jiffies = %d\n", jiffies);
 
-	while (1) {
+	timer = jiffies + 100 * 1000;
+	while (timer > jiffies) {
 		nes_eval();
 	}
+	_mcleanup();
+	while (1);
 
 	return 0;
 }

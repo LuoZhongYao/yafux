@@ -62,6 +62,9 @@ SECTIONS
   .text :
   {
     . = ALIGN(4);
+	__gmon_start = .;
+	nes/libnes.a(.text .text*)
+	__gmon_end = .;
     *(.text)           /* .text sections (code) */
     *(.text*)          /* .text* sections (code) */
     *(.rodata)         /* .rodata sections (constants, strings, etc.) */
