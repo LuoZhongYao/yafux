@@ -31,7 +31,7 @@ jobs:
     # Runs a set of commands using the runners shell
     - name: Build stmnes
       run: |
-        cmake -B build/stm32 -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/arm-none-eabi-toolchain.cmake -DCONFIG_MIPI=ON -DCONFIG_LCD=ON
+        cmake -B build/stm32 -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/arm-none-eabi-toolchain.cmake -DCONFIG_MIPI=ON -DCONFIG_LCD=ON -DCONFIG_STM32=ON
         cmake --build build/stm32
       
     - name: Build nesdl
